@@ -1,0 +1,238 @@
+name: Build Eden Nightly
+concurrency:
+  group: build-nightly-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: {}
+
+jobs:
+  appimage: 
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [steamdeck, rog, common, check]
+    continue-on-error: true
+    container: ghcr.io/pkgforge-dev/archlinux:latest
+    name: "Eden nightly appimage (${{ matrix.target }})"
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          persist-credentials: false
+          
+      - name: Set up cache for vcpkg
+        uses: actions/cache@v4.2.3
+        with:
+          path: /github/home/.cache/vcpkg/archives
+          key: ${{ runner.os }}-${{ matrix.target }}-vcpkg-${{ hashFiles('**/vcpkg.json') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.target }}-vcpkg-
+
+      - name: Set up ccache for check
+        if: ${{ matrix.target == 'check' }}
+        uses: actions/cache@v4.2.3
+        with:
+          path: /github/home/.ccache
+          key: ${{ runner.os }}-ccache-check-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-check-
+            
+      - name: Install dependencies
+        run: |
+          chmod +x ./get-dependencies.sh
+          ./get-dependencies.sh
+          
+      - name: Compile Eden ${{ matrix.target }}
+        env:
+          CCACHE_DIR: /github/home/.ccache
+        run: |
+          chmod +x ./eden-appimage.sh
+          ./eden-appimage.sh ${{ matrix.target }}
+          mkdir -p dist
+          mv *.AppImage* dist/
+
+      - name: Upload artifact
+        if: ${{ matrix.target != 'check' }}
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: eden-${{ matrix.target}}-appimage
+          path: "dist"
+
+      - name: Check hash file
+        run: |
+          cat ~/hash
+          echo "APP_VERSION=$(cat ~/version)" >> "${GITHUB_ENV}"
+
+      - name: Upload hash file
+        if: ${{ matrix.target == 'steamdeck' }}
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: hash
+          path: ~/hash
+          overwrite: true
+          
+  android: 
+    runs-on: ubuntu-latest
+    name: "Eden nightly (android)"
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install ccache apksigner glslang-tools libvulkan-dev -y
+          
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 21
+          
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+        
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v2
+        
+      - name: Accept Android SDK Licenses
+        run:  |
+          yes | sdkmanager --licenses
+          sdkmanager "ndk;26.1.10909125" "cmake;3.22.1"
+
+      - name: Compile Eden android
+        run: |
+          chmod +x ./eden-android.sh
+          ./eden-android.sh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4.6.2
+        with:
+         name: eden-android-universal
+         path: eden/src/android/artifacts/
+          
+  windows:
+    runs-on: windows-latest
+    name: "Eden nightly (windows)"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4.2.2
+ 
+      - name: Restore cache for vcpkg
+        id: cache-restore
+        uses: actions/cache/restore@v4.2.3
+        with:
+          path: 'C:\Users\runneradmin\AppData\Local\vcpkg\archives'
+          key: ${{ runner.os }}-vcpkg-cache
+            
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+       
+      - name: Install extra tools (MSVC)
+        run: choco install cmake 7zip wget -y --no-progress
+        
+      - name: Install Qt (MSVC)
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2022_64'
+          cache: 'true'
+        
+      - name: Install vulkan-sdk (MSVC)
+        run: |
+           wget -q https://sdk.lunarg.com/sdk/download/1.4.309.0/windows/VulkanSDK-1.4.309.0-Installer.exe -O D:/a/_temp/vulkan.exe
+           D:/a/_temp/vulkan.exe --accept-licenses --default-answer --confirm-command install
+           echo "VULKAN_SDK=C:/VulkanSDK/1.4.309.0" >> $GITHUB_ENV
+           echo "PATH=C:/VulkanSDK/1.4.309.0/Bin:$PATH" >> $GITHUB_ENV          
+        
+      - name: Compile Eden Windows
+        run: |
+          chmod +x ./eden-windows.sh
+          ./eden-windows.sh
+          
+      - name: Upload
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: eden-windows-msvc
+          path: eden/build/artifacts/
+          
+      - name: Save cache for vcpkg
+        id: cache-save
+        uses: actions/cache/save@v4.2.3
+        with:
+          path: 'C:\Users\runneradmin\AppData\Local\vcpkg\archives'
+          key: ${{ steps.cache-restore.outputs.cache-primary-key }}
+          
+  release:
+    name: "release"
+    if: ${{ always() && github.ref_name == 'main' }}
+    needs: [appimage, windows, android]
+    permissions:
+      actions: read
+      security-events: write
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+    
+      - uses: actions/download-artifact@v4.3.0
+        with:
+           name: eden-steamdeck-appimage
+        continue-on-error: true
+ 
+      - uses: actions/download-artifact@v4.3.0
+        with:
+           name: eden-rog-appimage
+        continue-on-error: true
+ 
+      - uses: actions/download-artifact@v4.3.0
+        with:
+           name: eden-common-appimage
+        continue-on-error: true
+           
+      - uses: actions/download-artifact@v4.3.0
+        with:
+           name: eden-android-universal
+        continue-on-error: true
+ 
+      - uses: actions/download-artifact@v4.3.0
+        with:
+           name: eden-windows-msvc
+        continue-on-error: true
+           
+      - uses: actions/download-artifact@v4.3.0
+        with:
+           name: hash
+           
+      - name: Read hash and Get date
+        run: |
+          export VERSION="$(cat hash)"
+          echo "APP_VERSION=${VERSION}" >> "${GITHUB_ENV}"
+          echo "date=$(date +'%Y-%m-%d')" >> "$GITHUB_ENV"
+
+      - name: Delete same tag release
+        run: |
+          gh release delete "${{ env.date }}-${{ env.APP_VERSION }}" --repo "${GITHUB_REPOSITORY}" --cleanup-tag  -y
+          sleep 5
+        env:
+          GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        continue-on-error: true
+
+      - name: Build Releaser
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Eden Nightly Release: ${{ env.APP_VERSION }}"
+          tag_name: "${{ env.date }}-${{ env.APP_VERSION }}"
+          prerelease: false
+          draft: false
+          generate_release_notes: false
+          fail_on_unmatched_files: false
+          make_latest: true
+          files: |
+            *.AppImage*, *.7z, *.apk
