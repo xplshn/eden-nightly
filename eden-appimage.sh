@@ -90,11 +90,10 @@ ccache -s -v
 # Use appimage-builder.sh to generate AppDir
 cd ../..
 chmod +x ./appimage-builder.sh
-./appimage-builder.sh eden ./build
-cp /usr/lib/libSDL3.so* ./build/deploy-linux/AppDir/usr/lib/ # Copying libsdl3 to target AppDir
+./appimage-builder.sh eden ./eden/build
+cp /usr/lib/libSDL3.so* ./eden/build/deploy-linux/AppDir/usr/lib/ # Copying libsdl3 to target AppDir
 
 # Prepare uruntime
-cd ..
 wget -q "$URUNTIME" -O ./uruntime
 chmod +x ./uruntime
 
