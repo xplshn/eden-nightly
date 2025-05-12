@@ -11,13 +11,14 @@
 [![CI Build Status](https://github.com//pflyly/eden-nightly/actions/workflows/build-nightly.yml/badge.svg)](https://github.com/pflyly/eden-nightly/releases/latest)
 
 > [!IMPORTANT]
-> This repository now makes nightly release of eden for Linux, Android and Windows.
+> This repository makes nightly release of eden for Linux, Android and Windows.
 >  
-> For Linux we make AppImage with several flags of optimization especially for **Steamdeck** & **ROG ALLY X** & **Modern CPUs**(Common Build).
+> For Linux, the AppImage is made with several flags of optimization especially targeted for **Steamdeck** & **ROG ALLY X** & **Modern CPUs**(Common Build).
 
 * [**Latest Nightly Release Here**](https://github.com/pflyly/eden-nightly/releases/latest)
 
 ---------------------------------------------------------------
+This repo is ported from my [citron-nightly repo](https://github.com/pflyly/Citron-Nightly), which is a fork based on the work of **@Samueru-sama**.
 
 It is possible that this appimage may fail to work with appimagelauncher, I recommend these alternatives instead: 
 
