@@ -88,7 +88,7 @@ echo "$(cat ~/hash)"
 ccache -s -v
 
 # Use appimage-builder.sh to generate AppDir
-cd ..
+cd ../..
 chmod +x ./appimage-builder.sh
 ./appimage-builder.sh eden ./build
 cp /usr/lib/libSDL3.so* ./build/deploy-linux/AppDir/usr/lib/ # Copying libsdl3 to target AppDir
