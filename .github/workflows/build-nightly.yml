@@ -63,10 +63,10 @@ jobs:
       - name: Check hash file
         run: |
           cat ~/hash
-          echo "APP_VERSION=$(cat ~/version)" >> "${GITHUB_ENV}"
+          echo "APP_VERSION=$(cat ~/hash)" >> "${GITHUB_ENV}"
 
       - name: Upload hash file
-        if: ${{ matrix.target == 'steamdeck' }}
+        if: ${{ matrix.target == 'check' }}
         uses: actions/upload-artifact@v4.6.2
         with:
           name: hash
@@ -122,29 +122,13 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4.2.2
- 
-      - name: Restore cache for vcpkg
-        id: cache-restore
-        uses: actions/cache/restore@v4.2.3
-        with:
-          path: 'C:\Users\runneradmin\AppData\Local\vcpkg\archives'
-          key: ${{ runner.os }}-vcpkg-cache
             
       - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1
        
       - name: Install extra tools (MSVC)
         run: choco install cmake 7zip wget -y --no-progress
-        
-      - name: Install Qt (MSVC)
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: '6.8.3'
-          host: 'windows'
-          target: 'desktop'
-          arch: 'win64_msvc2022_64'
-          cache: 'true'
-        
+                
       - name: Install vulkan-sdk (MSVC)
         run: |
            wget -q https://sdk.lunarg.com/sdk/download/1.4.309.0/windows/VulkanSDK-1.4.309.0-Installer.exe -O D:/a/_temp/vulkan.exe
@@ -162,13 +146,6 @@ jobs:
         with:
           name: eden-windows-msvc
           path: eden/build/artifacts/
-          
-      - name: Save cache for vcpkg
-        id: cache-save
-        uses: actions/cache/save@v4.2.3
-        with:
-          path: 'C:\Users\runneradmin\AppData\Local\vcpkg\archives'
-          key: ${{ steps.cache-restore.outputs.cache-primary-key }}
           
   release:
     name: "release"
