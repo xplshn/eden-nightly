@@ -120,7 +120,7 @@ jobs:
           
   windows:
     runs-on: windows-latest
-    name: "Eden nightly (windows)"
+    name: "Eden nightly windows (MSVC)"
     defaults:
       run:
         shell: bash
@@ -130,10 +130,10 @@ jobs:
       - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1
        
-      - name: Install extra tools (MSVC)
+      - name: Install extra tools
         run: choco install cmake 7zip wget -y --no-progress
                 
-      - name: Install vulkan-sdk (MSVC)
+      - name: Install vulkan-sdk
         run: |
            wget -q https://sdk.lunarg.com/sdk/download/1.4.309.0/windows/VulkanSDK-1.4.309.0-Installer.exe -O D:/a/_temp/vulkan.exe
            D:/a/_temp/vulkan.exe --accept-licenses --default-answer --confirm-command install
@@ -151,10 +151,42 @@ jobs:
           name: eden-windows-msvc
           path: eden/build/artifacts/
           
+  macos:
+    runs-on: ${{ matrix.runs-on }}
+    name: "Eden nightly macos (${{ matrix.target }})"
+    strategy:
+      matrix:
+       include:
+          - target: x86_64
+            runs-on: macos-13
+          - target: arm64
+            runs-on: macos-14
+    continue-on-error: true
+    env:
+      TARGET: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          brew install autoconf automake boost@1.85 ccache ffmpeg fmt glslang hidapi libtool nlohmann-json qt@6 sdl2 speexdsp zlib zlib cmake Catch2 molten-vk vulkan-loader
+          brew link --force boost@1.85
+        
+      - name: Compile Eden MacOS (${{ matrix.target }})
+        run: |
+          chmod +x ./eden-macos.sh
+          ./eden-macos.sh
+          
+      - name: Upload
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: eden-macos-${{ matrix.target }}
+          path: eden/build/artifacts/
+                    
   release:
     name: "release"
     if: ${{ always() && github.ref_name == 'main' }}
-    needs: [appimage, windows, android]
+    needs: [appimage, windows, android, macos]
     permissions:
       actions: read
       security-events: write
@@ -190,7 +222,17 @@ jobs:
         with:
            name: eden-windows-msvc
         continue-on-error: true
-           
+        
+      - uses: actions/download-artifact@v4.3.0
+        with:
+           name: eden-macos-x86_64
+        continue-on-error: true
+        
+      - uses: actions/download-artifact@v4.3.0
+        with:
+           name: eden-macos-arm64
+        continue-on-error: true
+        
       - uses: actions/download-artifact@v4.3.0
         with:
            name: hash
