@@ -53,7 +53,7 @@ esac
 
 UPINFO="gh-releases-zsync|$(echo "$GITHUB_REPOSITORY" | tr '/' '|')|latest|*$ARCH.AppImage.zsync"
 
-# BUILD Eden, fallback to mirror if upstream repo fails to clone
+# Clone Eden, fallback to mirror if upstream repo fails to clone
 if ! git clone 'https://git.eden-emu.dev/eden-emu/eden.git' ./eden; then
 	echo "Using mirror instead..."
 	rm -rf ./eden || true
@@ -61,15 +61,34 @@ if ! git clone 'https://git.eden-emu.dev/eden-emu/eden.git' ./eden; then
 fi
 
 cd ./eden
+
+# Get current commit info
+DATE="$(date +"%Y%m%d")"
 COUNT="$(git rev-list --count HEAD)"
 HASH="$(git rev-parse --short HEAD)"
-DATE="$(date +"%Y%m%d")"
-git submodule update --init --recursive -j$(nproc)
+echo "$HASH" > ~/hash
+
+# Generate release info and changelog
+CHANGELOG_FILE=~/changelog
+BASE_URL="https://git.eden-emu.dev/eden-emu/eden/commit"
+START_COUNT=$(git rev-list --count "$OLD_HASH")
+i=$((START_COUNT + 1))
+echo "Changelog:" > "$CHANGELOG_FILE"
+
+git log --reverse --pretty=format:"%H %s" "${OLD_HASH}..HEAD" | while IFS= read -r line || [ -n "$line" ]; do
+  full_hash="${line%% *}"
+  msg="${line#* }"
+  short_hash="$(git rev-parse --short "$full_hash")"
+  echo "- commit ${i} [${short_hash}](${BASE_URL}/${full_hash}) ${msg}" >> "$CHANGELOG_FILE"
+  i=$((i + 1))
+done
 
 # workaround for aarch64
 if [ "$1" = 'aarch64' ]; then
     sed -i 's/Settings::values\.lru_cache_enabled\.GetValue()/true/' src/core/arm/nce/patcher.h
 fi
+
+git submodule update --init --recursive
 
 mkdir build
 cd build
@@ -96,8 +115,6 @@ cmake .. -GNinja \
     ${CMAKE_CXX_FLAGS:+-DCMAKE_CXX_FLAGS="$CMAKE_CXX_FLAGS"} \
     ${CMAKE_C_FLAGS:+-DCMAKE_C_FLAGS="$CMAKE_C_FLAGS"}
 ninja -j$(nproc)
-echo "$HASH" >~/hash
-echo "$(cat ~/hash)"
 ccache -s -v
 
 # Use appimage-builder.sh to generate AppDir
