@@ -17,9 +17,9 @@ cd ./eden
 git submodule update --init --recursive
 
 COUNT="$(git rev-list --count HEAD)"
-HASH="$(git rev-parse --short HEAD)"
-DATE="$(date +"%Y%m%d")"
-APP_NAME="Eden-nightly-${DATE}-${COUNT}-${HASH}-MacOS-${TARGET}"
+# HASH="$(git rev-parse --short HEAD)"
+# DATE="$(date +"%Y%m%d")"
+APP_NAME="Eden-${COUNT}-MacOS-${TARGET}"
 
 mkdir build
 cd build
@@ -30,6 +30,7 @@ cmake .. -GNinja \
     -DENABLE_QT_TRANSLATION=ON \
     -DYUZU_ENABLE_LTO=ON \
     -DUSE_DISCORD_PRESENCE=OFF \
+    -DENABLE_WEB_SERVICE=OFF \
     -DCMAKE_OSX_ARCHITECTURES="$TARGET" \
     -DCMAKE_CXX_FLAGS="-w" \
     -DCMAKE_BUILD_TYPE=Release \
