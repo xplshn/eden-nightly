@@ -26,7 +26,6 @@ cd build
 cmake .. -GNinja \
     -DYUZU_TESTS=OFF \
     -DYUZU_USE_BUNDLED_QT=OFF \
-    -DUSE_SYSTEM_QT=ON \
     -DENABLE_QT_TRANSLATION=ON \
     -DYUZU_ENABLE_LTO=ON \
     -DUSE_DISCORD_PRESENCE=OFF \
@@ -36,8 +35,12 @@ cmake .. -GNinja \
     -DCMAKE_OSX_ARCHITECTURES="$TARGET" \
     -DCMAKE_CXX_FLAGS="-w" \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+    -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+    -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+    -DYUZU_USE_PRECOMPILED_HEADERS=OFF 
 ninja
+ccache -s -v
 
 # Bundle and code-sign eden.app
 APP=./bin/eden.app
