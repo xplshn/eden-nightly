@@ -24,15 +24,24 @@ case "$1" in
         YUZU_ENABLE_LTO=ON
         TARGET="ROG_Ally_X"
         ;;
-    common)
-        echo "Making Eden Optimized Build for Modern CPUs"
+    common-light)
+        echo "Making Eden Optimized Build for Modern CPUs via linuxdepoly"
         CMAKE_EXE_LINKER_FLAGS="-Wl,--as-needed"
         CMAKE_CXX_FLAGS="-march=x86-64-v3 -O3 -pipe -flto=auto -Wno-error"
         CMAKE_C_FLAGS="-march=x86-64-v3 -O3 -pipe -flto=auto -Wno-error"
         YUZU_ENABLE_LTO=ON
         ARCH="${ARCH}_v3"
-        TARGET="Common"
+        TARGET="Common-Light"
         ;;
+    common-universal)
+        echo "Making Eden Optimized Build for Modern CPUs via sharun"
+        CMAKE_EXE_LINKER_FLAGS="-Wl,--as-needed"
+        CMAKE_CXX_FLAGS="-march=x86-64-v3 -O3 -pipe -flto=auto -Wno-error"
+        CMAKE_C_FLAGS="-march=x86-64-v3 -O3 -pipe -flto=auto -Wno-error"
+        YUZU_ENABLE_LTO=ON
+        ARCH="${ARCH}_v3"
+        TARGET="Common-Universal"
+        ;;	
     aarch64)
         echo "Making Eden Optimized Build for AArch64"
         CMAKE_EXE_LINKER_FLAGS="-Wl,--as-needed"
@@ -82,13 +91,13 @@ git log --reverse --pretty=format:"%H %s" "${OLD_HASH}..HEAD" | while IFS= read 
   msg="${line#* }"
   short_hash="$(git rev-parse --short "$full_hash")"
   echo -e "- Merged commit: \`${i}\` [\`${short_hash}\`](${BASE_COMMIT_URL}/${full_hash})\n  ${msg}" >> "$CHANGELOG_FILE"
+  echo >> "$CHANGELOG_FILE"
   i=$((i + 1))
 done
 
 RELEASE_TAG="$(echo "$TAG" | awk -F'-' '{print $1 "-" $2 "-" $3}')"
 echo >> "$CHANGELOG_FILE"
 echo "Full Changelog: [\`${RELEASE_TAG}...master\`](${BASE_COMPARE_URL}/${RELEASE_TAG}...master)" >> "$CHANGELOG_FILE"
-echo "$(cat ~/changelog)"
 
 # workaround for aarch64
 if [ "$1" = 'aarch64' ]; then
@@ -128,11 +137,16 @@ if [ "$1" = 'check' ]; then
     ccache -s -v
 fi
 
-# Use appimage-builder.sh to generate AppDir
 cd ../..
-chmod +x ./appimage-builder.sh
-./appimage-builder.sh eden ./eden/build
-cp /usr/lib/libSDL3.so* ./eden/build/deploy-linux/AppDir/usr/lib/ # Copying libsdl3 to target AppDir
+if [ "$1" = 'common-universal' ]; then
+	# Use sharun to generate AppDir
+	chmod +x ./sharun.sh
+	./sharun.sh ./eden/build
+else
+	# Use linuxdeploy to generate AppDir
+	chmod +x ./linuxdeploy.sh
+	./linuxdeploy.sh ./eden/build
+fi
 
 # Prepare uruntime
 wget -q "$URUNTIME" -O ./uruntime
@@ -145,7 +159,7 @@ echo "Adding update information \"$UPINFO\" to runtime..."
 # Turn AppDir into appimage
 echo "Generating AppImage..."
 ./uruntime --appimage-mkdwarfs -f --set-owner 0 --set-group 0 --no-history --no-create-timestamp --compression zstd:level=22 -S26 -B32 \
---header uruntime -i ./eden/build/deploy-linux/AppDir -o Eden-"${COUNT}"-"${TARGET}"-"$ARCH".AppImage
+--header uruntime -i ./eden/build/AppDir -o Eden-"${COUNT}"-"${TARGET}"-"$ARCH".AppImage
 
 echo "Generating zsync file..."
 zsyncmake *.AppImage -u *.AppImage
