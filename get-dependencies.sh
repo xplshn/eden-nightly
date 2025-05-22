@@ -34,7 +34,6 @@ pacman -Syu --noconfirm \
 	enet \
 	ffmpeg \
 	fuse2 \
-	ffmpeg4.4 \
 	fmt \
 	gamemode \
 	git \

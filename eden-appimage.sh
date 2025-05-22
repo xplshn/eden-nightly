@@ -24,23 +24,14 @@ case "$1" in
         YUZU_ENABLE_LTO=ON
         TARGET="ROG_Ally_X"
         ;;
-    common-light)
+    common)
         echo "Making Eden Optimized Build for Modern CPUs via linuxdepoly"
         CMAKE_EXE_LINKER_FLAGS="-Wl,--as-needed"
         CMAKE_CXX_FLAGS="-march=x86-64-v3 -O3 -pipe -flto=auto -Wno-error"
         CMAKE_C_FLAGS="-march=x86-64-v3 -O3 -pipe -flto=auto -Wno-error"
         YUZU_ENABLE_LTO=ON
         ARCH="${ARCH}_v3"
-        TARGET="Common-Light"
-        ;;
-    common-universal)
-        echo "Making Eden Optimized Build for Modern CPUs via sharun"
-        CMAKE_EXE_LINKER_FLAGS="-Wl,--as-needed"
-        CMAKE_CXX_FLAGS="-march=x86-64-v3 -O3 -pipe -flto=auto -Wno-error"
-        CMAKE_C_FLAGS="-march=x86-64-v3 -O3 -pipe -flto=auto -Wno-error"
-        YUZU_ENABLE_LTO=ON
-        ARCH="${ARCH}_v3"
-        TARGET="Common-Universal"
+        TARGET="Common"
         ;;	
     aarch64)
         echo "Making Eden Optimized Build for AArch64"
@@ -62,14 +53,33 @@ esac
 
 UPINFO="gh-releases-zsync|$(echo "$GITHUB_REPOSITORY" | tr '/' '|')|latest|*$ARCH.AppImage.zsync"
 
-# Clone Eden, fallback to mirror if upstream repo fails to clone
-if ! git clone 'https://git.eden-emu.dev/eden-emu/eden.git' ./eden; then
-	echo "Using mirror instead..."
-	rm -rf ./eden || true
-	git clone 'https://github.com/pflyly/eden-mirror.git' ./eden
-fi
+# We really need to hanlde this due to frequent failure of submodule update
+clone_eden() {
+	# Clone Eden, fallback to mirror if upstream repo fails to clone
+	if ! git clone 'https://git.eden-emu.dev/eden-emu/eden.git' ./eden; then
+		echo "Using mirror instead..."
+		rm -rf ./eden || true
+		git clone 'https://github.com/pflyly/eden-mirror.git' ./eden
+	fi
+}
 
+rm -rf ./eden || true
+clone_eden
 cd ./eden
+
+if ! git submodule update --init --recursive; then
+    echo "Submodule update failed! Deleting and re-cloning the entire repo."
+    sleep 30
+    
+    # Re-cloning the entire repo in case of submodule corruption
+    cd ..
+    rm -rf ./eden || true
+    clone_eden
+    cd ./eden
+
+    # Now try submodules again — if this fails again, let it explode!!!
+    git submodule update --init --recursive
+fi
 
 # Get current commit info
 DATE="$(date +"%Y%m%d")"
@@ -96,15 +106,12 @@ git log --reverse --pretty=format:"%H %s" "${OLD_HASH}..HEAD" | while IFS= read 
 done
 
 RELEASE_TAG="$(echo "$TAG" | awk -F'-' '{print $1 "-" $2 "-" $3}')"
-echo >> "$CHANGELOG_FILE"
 echo "Full Changelog: [\`${RELEASE_TAG}...master\`](${BASE_COMPARE_URL}/${RELEASE_TAG}...master)" >> "$CHANGELOG_FILE"
 
 # workaround for aarch64
 if [ "$1" = 'aarch64' ]; then
     sed -i 's/Settings::values\.lru_cache_enabled\.GetValue()/true/' src/core/arm/nce/patcher.h
 fi
-
-git submodule update --init --recursive
 
 mkdir build
 cd build
@@ -138,15 +145,9 @@ if [ "$1" = 'check' ]; then
 fi
 
 cd ../..
-if [ "$1" = 'common-universal' ]; then
-	# Use sharun to generate AppDir
-	chmod +x ./sharun.sh
-	./sharun.sh ./eden/build
-else
-	# Use linuxdeploy to generate AppDir
-	chmod +x ./linuxdeploy.sh
-	./linuxdeploy.sh ./eden/build
-fi
+# Use sharun to generate AppDir
+chmod +x ./sharun.sh
+./sharun.sh ./eden/build
 
 # Prepare uruntime
 wget -q "$URUNTIME" -O ./uruntime
@@ -157,11 +158,17 @@ echo "Adding update information \"$UPINFO\" to runtime..."
 ./uruntime --appimage-addupdinfo "$UPINFO"
 
 # Turn AppDir into appimage
-echo "Generating AppImage..."
+echo "Generating AppImage with mesa"
 ./uruntime --appimage-mkdwarfs -f --set-owner 0 --set-group 0 --no-history --no-create-timestamp --compression zstd:level=22 -S26 -B32 \
---header uruntime -i ./eden/build/AppDir -o Eden-"${COUNT}"-"${TARGET}"-"$ARCH".AppImage
+--header uruntime -i ./eden/build/mesa/AppDir -o Eden-"${COUNT}"-"${TARGET}"-"$ARCH".AppImage
 
-echo "Generating zsync file..."
-zsyncmake *.AppImage -u *.AppImage
+echo "Generating AppImage without mesa"
+./uruntime --appimage-mkdwarfs -f --set-owner 0 --set-group 0 --no-history --no-create-timestamp --compression zstd:level=22 -S26 -B32 \
+--header uruntime -i ./eden/build/light/AppDir -o Eden-"${COUNT}"-"${TARGET}"-light-"$ARCH".AppImage
+
+for appimage in *.AppImage; do
+  echo "Generating zsync file for $appimage"
+  zsyncmake -v "$appimage" -u "$appimage"
+done
 
 echo "All Done!"
