@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # SPDX-FileCopyrightText: 2025 eden Emulator Project
 # SPDX-License-Identifier: GPL-3.0-or-later
