@@ -18,6 +18,7 @@ sudo ninja install
 
 # Set base libs
 COMMON_LIBS=(
+    /usr/lib/libSDL*
     /usr/lib/libXss.so*
     /usr/lib/libgamemode.so*
     /usr/lib/qt6/plugins/audio/*
