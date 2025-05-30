@@ -21,8 +21,6 @@ COMMON_LIBS=(
     /usr/lib/libSDL*
     /usr/lib/libXss.so*
     /usr/lib/libgamemode.so*
-    /usr/lib/qt6/plugins/audio/*
-    /usr/lib/qt6/plugins/bearer/*
     /usr/lib/qt6/plugins/imageformats/*
     /usr/lib/qt6/plugins/iconengines/*
     /usr/lib/qt6/plugins/platforms/*
