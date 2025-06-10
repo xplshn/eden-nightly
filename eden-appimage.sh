@@ -6,6 +6,7 @@ export APPIMAGE_EXTRACT_AND_RUN=1
 export ARCH="$(uname -m)"
 
 URUNTIME="https://github.com/VHSgunzo/uruntime/releases/latest/download/uruntime-appimage-dwarfs-$ARCH"
+PELF="https://github.com/xplshn/pelf/releases/latest/download/pelf_$ARCH"
 
 case "$1" in
     steamdeck)
@@ -45,6 +46,7 @@ fi
 cd ./eden
 git submodule update --init --recursive
 COUNT="$(git rev-list --count HEAD)"
+DATE="$(date +"%d_%m_%Y")"
 
 # workaround for aarch64
 if [ "$1" = 'aarch64' ]; then
@@ -89,18 +91,20 @@ chmod +x ./sharun.sh
 chmod +x ./linuxdeploy.sh
 ./linuxdeploy.sh ./eden/build
 
-# Prepare uruntime
+# Prepare uruntime and pelf
 wget -q "$URUNTIME" -O ./uruntime
 chmod +x ./uruntime
+wget -q "$PELF" -O ./pelf
+chmod +x ./pelf
 
 # Add udpate info to runtime
 echo "Adding update information \"$UPINFO\" to runtime..."
 ./uruntime --appimage-addupdinfo "$UPINFO"
 
-# Turn AppDir into appimage and upload seperately
+# Turn AppDir into appimage and appbundle, upload seperately
 echo "Generating AppImage with mesa"
 MESA_APPIMAGE="Eden-${COUNT}-${TARGET}-${ARCH}.AppImage"
-./uruntime --appimage-mkdwarfs -f --set-owner 0 --set-group 0 --no-history --no-create-timestamp --compression zstd:level=22 -S26 -B32 \
+./uruntime --appimage-mkdwarfs -f --set-owner 0 --set-group 0 --no-history --no-create-timestamp --compression zstd:level=22 -S26 -B8 \
 --header uruntime -i ./eden/build/mesa/AppDir -o "$MESA_APPIMAGE"
 
 echo "Generating zsync file for $MESA_APPIMAGE"
@@ -109,9 +113,19 @@ zsyncmake -v "$MESA_APPIMAGE" -u "$MESA_APPIMAGE"
 mkdir -p mesa
 mv -v "${MESA_APPIMAGE}"* mesa/
 
+echo "Generating AppBundle...(Go runtime)"
+APPBUNDLE="Eden-${COUNT}-${TARGET}-${ARCH}.dwfs.AppBundle"
+./pelf --add-appdir ./eden/build/mesa/AppDir --appbundle-id="Eden-${DATE}-Escary" --compression "-C zstd:level=22 -S26 -B8" --output-to "$APPBUNDLE"
+ 
+echo "Generating zsync file for $APPBUNDLE"
+zsyncmake -v "$APPBUNDLE" -u "$APPBUNDLE"
+
+mkdir -p bundle
+mv -v "${APPBUNDLE}"* bundle/
+
 echo "Generating AppImage without mesa"
 LIGHT_APPIMAGE="Eden-${COUNT}-${TARGET}-light-${ARCH}.AppImage"
-./uruntime --appimage-mkdwarfs -f --set-owner 0 --set-group 0 --no-history --no-create-timestamp --compression zstd:level=22 -S26 -B32 \
+./uruntime --appimage-mkdwarfs -f --set-owner 0 --set-group 0 --no-history --no-create-timestamp --compression zstd:level=22 -S26 -B8 \
 --header uruntime -i ./eden/build/light/AppDir -o "$LIGHT_APPIMAGE"
 
 echo "Generating zsync file for $LIGHT_APPIMAGE"
