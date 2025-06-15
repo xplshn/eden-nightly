@@ -1,7 +1,5 @@
 <h1 align="left">
   <br>
-  <a href="https://git.eden-emu.dev/eden-emu/eden"><img src="https://git.eden-emu.dev/eden-emu/eden/raw/branch/master/dist/eden.ico" width="200"></a>
-  <br>
   <b>Unofficial Eden Nightly Release</b>
   <br>
 </h1>
