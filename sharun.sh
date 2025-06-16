@@ -22,7 +22,7 @@ ln -sfv ./eden.svg ./.DirIcon
     
 wget --retry-connrefused --tries=30 "$LIB4BN" -O ./lib4bin
 chmod +x ./lib4bin
-./lib4bin -p -v -e -s -k \
+xvfb-run -a -- ./lib4bin -p -v -e -s -k \
     /usr/bin/eden \
     /usr/lib/libSDL* \
     /usr/lib/libXss.so* \
