@@ -34,6 +34,8 @@ The builds for Linux are built with several CPU-specific compliler optimization 
 - **AArch64 devices** — compatible with `aarch64` architecture
 
 AppImages built using [**Sharun**](https://github.com/VHSgunzo/sharun) are bundled with **Mesa drivers** to ensure maximum compatibility — similar to Eden’s official releases and may include the latest fixes for certain games (though untested).
+>[!WARNING]
+Some users have reported issues with this version. Use with caution and report any problems if possible.
 
 A newly added **AppBundle** version, built with [**pelf**](https://github.com/xplshn/pelf), serves as an alternative to AppImage. It's a lightweight format written in Go and intended for broader Linux compatibility.
 

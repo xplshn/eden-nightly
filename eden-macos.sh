@@ -95,7 +95,7 @@ codesign --deep --force --verify --verbose --sign - "$APP"
 # Pack for upload
 mkdir -p artifacts
 mkdir "$APP_NAME"
-cp -r ./bin/* "$APP_NAME"
+cp -av ./bin/. "$APP_NAME"
 ZIP_NAME="$APP_NAME.7z"
 7z a -t7z -mx=9 "$ZIP_NAME" "$APP_NAME"
 mv "$ZIP_NAME" artifacts/

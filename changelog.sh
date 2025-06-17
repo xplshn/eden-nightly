@@ -11,13 +11,13 @@ if ! git clone 'https://git.eden-emu.dev/eden-emu/eden.git' ./eden; then
 	git clone 'https://github.com/pflyly/eden-mirror.git' ./eden
 fi
 cd ./eden
-git submodule update --init --recursive
 
 # Get current commit info
 COUNT="$(git rev-list --count HEAD)"
 DATE="$(date +"%Y-%m-%d")"
 HASH="$(git rev-parse --short HEAD)"
 TAG="${DATE}-${HASH}"
+SOURCE_NAME="Eden-${COUNT}-Source-Code"
 echo "$TAG" > ~/tag
 echo "$COUNT" > ~/count
 
@@ -82,3 +82,13 @@ echo "| Linux (AppBundle) | **AppImage alternative**<br>────────
 echo "| Android | **Cancelled** |" >> "$CHANGELOG_FILE"
 echo "| Windows | [~~ARM64~~]*(Unavailable)*<br><br>[\`x86_64\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-Windows-x86_64.7z) |" >> "$CHANGELOG_FILE"
 echo "| MacOS (Experimental) | [\`arm64\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-MacOS-arm64.7z)<br><br>[\`x86_64\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-MacOS-x86_64.7z) |" >> "$CHANGELOG_FILE"
+echo "| [Source Code](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-Source-Code.7z) | |" >> "$CHANGELOG_FILE"
+
+# Pack up source for upload
+cd ..
+mkdir -p artifacts
+mkdir "$SOURCE_NAME"
+cp -av eden/. "$SOURCE_NAME"
+ZIP_NAME="$SOURCE_NAME.7z"
+7z a -t7z -mx=9 "$ZIP_NAME" "$SOURCE_NAME"
+mv "$ZIP_NAME" artifacts/
