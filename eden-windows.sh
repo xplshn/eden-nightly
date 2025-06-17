@@ -61,7 +61,6 @@ cmake .. -G Ninja \
     -DYUZU_ROOM_STANDALONE=OFF \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_SYSTEM_PROCESSOR=${ARCH} \
-    -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
     "${EXTRA_CMAKE_FLAGS[@]}"
 ninja
 
