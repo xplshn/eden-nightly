@@ -69,6 +69,10 @@ Shares the same application ID as the official Eden release. Installing this ver
   
 Uses a nightly application ID, allowing it to coexist with the official Eden release. It appears as "**eden unofficial**" on the home screen, and "**Eden Unofficial**" on the main screen of eden.
 
+- **Optimised** Build
+  
+Using com.miHoYo.Yuanshen for application ID to enable device dependent features such as AI frame generation. It appears as "**eden Optimised**" on the home screen.
+
 ---------------------------------------------------------------
 
 ### 🪟 Windows Builds

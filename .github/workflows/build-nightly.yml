@@ -121,7 +121,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        target: [Replace, Coexist]
+        target: [Replace, Coexist, Optimised]
     continue-on-error: true
     name: "Android (${{ matrix.target }})"
     env:
