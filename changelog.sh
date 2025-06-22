@@ -74,11 +74,12 @@ echo "| Linux (AppImage) | **Full Builds (Built with Sharun)**<br><sub>Best comp
 [\`Legacy-light x86_64\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-Legacy-light-x86_64.AppImage) ~ 36 MB<br><br>\
 [\`Steamdeck-light x86_64\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-Steamdeck-light-x86_64.AppImage) ~ 36 MB<br><br>\
 [\`aarch64-light (Experimental)\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-Linux-light-aarch64.AppImage) ~ 35 MB |" >> "$CHANGELOG_FILE"
-echo "| Linux (AppBundle) | **AppImage alternative**<br>────────────────<br>\
+echo "| Linux (AppBundle) | **AppImage alternative**<br><sub>Faster start-up time</sub><br>────────────────<br>\
 [\`Common x86_64_v3\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-Common-x86_64_v3.dwfs.AppBundle)<br><br>\
 [\`Legacy x86_64\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-Legacy-x86_64.dwfs.AppBundle)<br><br>\
 [\`Steamdeck x86_64\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-Steamdeck-x86_64.dwfs.AppBundle)<br><br>\
 [\`aarch64 (Experimental)\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-Linux-aarch64.dwfs.AppBundle) |" >> "$CHANGELOG_FILE"
+echo "| FreeBSD (Experimental) | [\`amd64\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-27339-FreeBSD-amd64.pkg) |" >> "$CHANGELOG_FILE"
 echo "| Android | **Cancelled** |" >> "$CHANGELOG_FILE"
 echo "| Windows | [~~ARM64~~]*(Unavailable)*<br><br>[\`x86_64\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-Windows-x86_64.7z) |" >> "$CHANGELOG_FILE"
 echo "| MacOS (Experimental) | [\`arm64\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-MacOS-arm64.7z)<br><br>[\`x86_64\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-MacOS-x86_64.7z) |" >> "$CHANGELOG_FILE"

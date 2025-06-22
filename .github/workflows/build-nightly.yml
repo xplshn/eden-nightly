@@ -91,8 +91,8 @@ jobs:
             
       - name: Install dependencies
         run: |
-          chmod +x ./get-dependencies.sh
-          ./get-dependencies.sh
+          chmod +x ./linux-dependencies.sh
+          ./linux-dependencies.sh
           
       - name: Compile Eden ${{ matrix.target }}
         run: |
@@ -266,11 +266,50 @@ jobs:
         with:
           name: eden-macos-${{ matrix.target }}
           path: eden/build/artifacts/
+
+  freebsd:
+    name: FreeBSD 
+    runs-on: ubuntu-latest
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up ccache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: FreeBSD-ccache-${{ hashFiles('vcpkg.json') }}
+          restore-keys: FreeBSD-ccache-
+
+      - name: Pull Eden with submodules
+        run: |
+          git clone https://github.com/pflyly/eden-mirror.git eden
+          cd eden
+          git checkout 2d0f15c
+          git submodule update --init --recursive $(awk '/path/ && !/vcpkg/ && !/ffmpeg/ && !/libusb/ { print $3 }' .gitmodules)
+          
+      - name: Compile Eden FreeBSD
+        uses: vmactions/freebsd-vm@v1.2.1
+        with:
+          usesh: true
+          envs: 'CCACHE_DIR'
+          run: |
+            chmod +x ./freeBSD-dependencies.sh ./eden-freeBSD.sh
+            ./freeBSD-dependencies.sh && ./eden-freeBSD.sh
+            
+      - name: Upload
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: eden-freebsd
+          path: eden/build/artifacts/
+
                     
   release:
     name: "release"
     if: ${{ github.ref_name == 'main' }}
-    needs: [info, appimage, windows, macos]
+    needs: [info, appimage, windows, macos, freebsd]
     permissions:
       actions: read
       security-events: write
@@ -354,6 +393,11 @@ jobs:
         
       - uses: actions/download-artifact@v4.3.0
         with:
+           name: eden-freebsd
+        continue-on-error: true
+        
+      - uses: actions/download-artifact@v4.3.0
+        with:
            name: tag
            
       - uses: actions/download-artifact@v4.3.0
@@ -388,4 +432,4 @@ jobs:
           fail_on_unmatched_files: false
           make_latest: true
           files: |
-            *.AppImage*, *.AppBundle*, *.7z
+            *.AppImage*, *.AppBundle*, *.7z, *.tar.xz
