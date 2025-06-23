@@ -287,7 +287,8 @@ jobs:
         run: |
           git clone https://github.com/pflyly/eden-mirror.git eden
           cd eden
-          git submodule update --init --recursive $(awk '/path/ && !/vcpkg/ && !/libusb/ { print $3 }' .gitmodules)
+          git checkout 2d0f15c
+          git submodule update --init --recursive $(awk '/path/ && !/vcpkg/ && !/ffmpeg/ && !/libusb/ { print $3 }' .gitmodules)
           
       - name: Compile Eden FreeBSD
         uses: vmactions/freebsd-vm@v1.2.1
