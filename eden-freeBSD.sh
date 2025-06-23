@@ -17,11 +17,13 @@ sed -i '' '/#elif defined(__APPLE__)/i\
 #define RENDERDOC_CC\
 ' externals/renderdoc/renderdoc_app.h
 
+# workaound for ffmpeg
+sed -i '' 's/make -j\${SYSTEM_THREADS}/gmake -j\${SYSTEM_THREADS}/' externals/ffmpeg/CMakeLists.txt
+
 mkdir build
 cd build
 cmake .. -GNinja \
     -DYUZU_TESTS=OFF \
-    -DYUZU_USE_BUNDLED_FFMPEG=OFF \
     -DYUZU_CHECK_SUBMODULES=OFF \
     -DYUZU_USE_FASTER_LD=ON \
     -DYUZU_ENABLE_LTO=ON \
