@@ -16,18 +16,20 @@ if [[ "${ARCH}" == "ARM64" ]]; then
     export EXTRA_CMAKE_FLAGS=(
         -DYUZU_USE_BUNDLED_SDL2=OFF
         -DYUZU_USE_EXTERNAL_SDL2=ON
- 	-DYUZU_USE_BUNDLED_FFMPEG=OFF
-  	-DFFmpeg_PATH="D:/a/eden-nightly/eden-nightly/eden/externals/vcpkg/packages/ffmpeg_arm64-windows"
+	-DCMAKE_SYSTEM_NAME=Windows
     )
 
-    # Add SDL2 & ffmpeg to vcpkg.json
-    sed -i '/"fmt",/a \        "sdl2",' vcpkg.json
-    sed -i '/"sdl2",/a \        "ffmpeg",' vcpkg.json
-    sed -i 's/^\s*include(CopyYuzuFFmpegDeps)/# &/' src/yuzu/CMakeLists.txt
-    sed -i 's/^\s*copy_yuzu_FFmpeg_deps(yuzu)/# &/' src/yuzu/CMakeLists.txt
+# workaround for ffmpeg
+# use prebuilt arm64 ffmpeg from https://github.com/tordona/ffmpeg-win-arm64/releases
+# trimmed unused files according to the ffmpeg x64 build from eden repo
+sed -i 's|set(package_base_url "https://git.eden-emu.dev/eden-emu/")|set(package_base_url "https://github.com/pflyly/eden-nightly/")|' CMakeModules/DownloadExternals.cmake
+sed -i '/if *(WIN32)/,/^elseif/ {
+    s|set(package_repo ".*")|set(package_repo "raw/refs/heads/main/")|
+    s|set(package_extension ".*")|set(package_extension ".zip")|
+}' CMakeModules/DownloadExternals.cmake
 
-    # Adapt upstream WIP changes
-    sed -i '
+# Adapt upstream WIP changes
+sed -i '
 /#elif defined(ARCHITECTURE_x86_64)/{
     N
     /asm volatile("mfence\\n\\tlfence\\n\\t" : : : "memory");/a\
@@ -42,8 +44,8 @@ if [[ "${ARCH}" == "ARM64" ]]; then
 }
 ' src/core/arm/dynarmic/dynarmic_cp15.cpp
 
-    sed -i 's/list(APPEND CMAKE_PREFIX_PATH "${Qt6_DIR}")/list(PREPEND CMAKE_PREFIX_PATH "${Qt6_DIR}")/' CMakeLists.txt
-    sed -i '/#include <boost\/asio.hpp>/a #include <boost/version.hpp>' src/core/debugger/debugger.cpp
+sed -i 's/list(APPEND CMAKE_PREFIX_PATH "${Qt6_DIR}")/list(PREPEND CMAKE_PREFIX_PATH "${Qt6_DIR}")/' CMakeLists.txt
+sed -i '/#include <boost\/asio.hpp>/a #include <boost/version.hpp>' src/core/debugger/debugger.cpp
 fi
 
 COUNT="$(git rev-list --count HEAD)"
@@ -70,13 +72,10 @@ mkdir deploy
 cp -r bin/* deploy/
 
 if [[ "${ARCH}" == "ARM64" ]]; then
-	# Ensure all required FFmpeg DLLs are included (may be partially bundled already — see CI logs)
-	cp -v ../externals/vcpkg/packages/ffmpeg_arm64-windows/bin/*.dll deploy/
- 
  	# Use ARM64-specific Qt paths with windeployqt
- 	"D:/a/eden-nightly/Qt/6.8.3/msvc2022_64/bin/windeployqt.exe" --qtpaths "D:/a/eden-nightly/Qt/6.8.3/msvc2022_arm64/bin/qtpaths6.bat" --release --no-compiler-runtime --no-opengl-sw --no-system-d3d-compiler --dir deploy "$EXE_PATH"
+ 	"D:/a/eden-nightly/Qt/6.8.3/msvc2022_64/bin/windeployqt6.exe" --qtpaths "D:/a/eden-nightly/Qt/6.8.3/msvc2022_arm64/bin/qtpaths6.bat" --release --no-compiler-runtime --no-opengl-sw --no-system-d3d-compiler --no-system-dxc-compiler --dir deploy "$EXE_PATH"
 else
-	windeployqt6 --release --no-compiler-runtime --no-opengl-sw --no-patchqt --no-quick --no-system-dxc-compiler --no-quick-import --no-system-d3d-compiler --dir deploy "$EXE_PATH"
+	windeployqt6 --release --no-compiler-runtime --no-opengl-sw --no-system-dxc-compiler --no-system-d3d-compiler --dir deploy "$EXE_PATH"
 fi
 
 # Delete un-needed debug files 

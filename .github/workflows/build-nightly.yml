@@ -168,9 +168,9 @@ jobs:
            - target: x86_64
              arch: x86_64
              qt_arch: win64_msvc2022_64
-#           - target: x86_arm64
-#             arch: ARM64
-#             qt_arch: win64_msvc2022_arm64_cross_compiled
+           - target: x86_arm64
+             arch: ARM64
+             qt_arch: win64_msvc2022_arm64_cross_compiled
     env:
       TARGET: ${{ matrix.target }}
       ARCH: ${{ matrix.arch }}
@@ -375,20 +375,17 @@ jobs:
         with:
            name: eden-windows-msvc-x86_64
         
-#      - uses: actions/download-artifact@v4.3.0
-#        with:
-#           name: eden-windows-msvc-x86_arm64
-#        continue-on-error: true
+      - uses: actions/download-artifact@v4.3.0
+        with:
+           name: eden-windows-msvc-x86_arm64
         
       - uses: actions/download-artifact@v4.3.0
         with:
            name: eden-macos-x86_64
-        continue-on-error: true
         
       - uses: actions/download-artifact@v4.3.0
         with:
            name: eden-macos-arm64
-        continue-on-error: true
         
       - uses: actions/download-artifact@v4.3.0
         with:
