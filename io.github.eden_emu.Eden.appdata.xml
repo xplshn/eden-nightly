@@ -3,7 +3,7 @@
   <id>io.github.eden_emu.Eden</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0+</project_license>
-  <developer_name>Eden Team, pflyly and contributors</developer_name>
+  <developer_name>Eden Team and contributors</developer_name>
   <provides>
     <id>eden.desktop</id>
   </provides>
