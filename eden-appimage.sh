@@ -1,8 +1,11 @@
 #!/bin/bash
 
-set -ex
+set -exu # -u: exit if referenced variables aren't assigned
+         # -e: exit upon command error (NOTE: Builtin operator failures are handled differently depending the shell. POSIX behavior would be to quit, even if the condition was done with `test` )
+         # -x: Print values of referenced variables, assignments, conditions and commands as they are executed/evaluated
 
 export APPIMAGE_EXTRACT_AND_RUN=1
+# shellcheck disable=SC2155 # Its unlikely that uname -m will fail
 export ARCH="$(uname -m)"
 
 URUNTIME="https://github.com/VHSgunzo/uruntime/releases/latest/download/uruntime-appimage-dwarfs-$ARCH"
@@ -33,7 +36,7 @@ case "$1" in
 	YUZU_USE_PRECOMPILED_HEADERS=OFF
 	CCACHE="ccache"
         TARGET="Legacy"
-        ;;	
+        ;;
     aarch64)
         echo "Making Eden Optimized Build for AArch64"
         CMAKE_CXX_FLAGS="-march=armv8-a -mtune=generic -O3 -pipe -flto=auto -w"
@@ -42,7 +45,8 @@ case "$1" in
         ;;
 esac
 
-UPINFO="gh-releases-zsync|$(echo "$GITHUB_REPOSITORY" | tr '/' '|')|latest|*$ARCH.AppImage.zsync"
+AI_UPINFO="gh-releases-zsync|$(echo "$GITHUB_REPOSITORY" | tr '/' '|')|latest|*$ARCH.AppImage.zsync"
+AB_UPINFO="gh-releases-zsync|$(echo "$GITHUB_REPOSITORY" | tr '/' '|')|latest|*$ARCH.dwfs.AppBundle.zsync"
 
 # Clone Eden, fallback to mirror if upstream repo fails to clone
 if ! git clone 'https://git.eden-emu.dev/eden-emu/eden.git' ./eden; then
@@ -105,9 +109,9 @@ chmod +x ./uruntime
 wget -q "$PELF" -O ./pelf
 chmod +x ./pelf
 
-# Add udpate info to runtime
-echo "Adding update information \"$UPINFO\" to runtime..."
-./uruntime --appimage-addupdinfo "$UPINFO"
+# Add update info to runtime
+echo "Adding update information \"$AI_UPINFO\" to runtime..."
+./uruntime --appimage-addupdinfo "$AI_UPINFO"
 
 # Turn AppDir into appimage and appbundle, upload seperately
 echo "Generating AppImage with mesa"
@@ -123,8 +127,9 @@ mv -v "${MESA_APPIMAGE}"* mesa/
 
 echo "Generating AppBundle...(Go runtime)"
 APPBUNDLE="Eden-${COUNT}-${TARGET}-${ARCH}.dwfs.AppBundle"
-./pelf --add-appdir ./eden/build/mesa/AppDir --appbundle-id="Eden-${DATE}-Escary" --compression "-C zstd:level=22 -S26 -B8" --output-to "$APPBUNDLE"
- 
+ln -sfv ./eden/build/mesa/AppDir/eden.svg ./eden/build/mesa/AppDir/.DirIcon.svg
+./pelf --add-appdir ./eden/build/mesa/AppDir --appbundle-id="Eden-${DATE}-Escary" --compression "-C zstd:level=22 -S26 -B8" --output-to "$APPBUNDLE" --add-updinfo "$AB_UPINFO"
+
 echo "Generating zsync file for $APPBUNDLE"
 zsyncmake -v "$APPBUNDLE" -u "$APPBUNDLE"
 

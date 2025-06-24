@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.eden_emu.Eden</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0+</project_license>
+  <developer_name>Eden Team, pflyly and contributors</developer_name>
+  <provides>
+    <id>eden.desktop</id>
+  </provides>
+  <name>Eden</name>
+  <summary>Open-source Switch emulator for high-performance gaming</summary>
+  <!-- <launchable type="desktop-id">io.github.eden_emu.Eden.desktop</launchable> -->
+  <launchable type="desktop-id">eden.desktop</launchable>
+  <description>
+    <p>
+      Eden is an open-source emulator for the Switch, crafted to deliver exceptional
+      performance and stability across Windows, Linux, and Android platforms, with
+      macOS support planned. Built in C++ as a fork of the Yuzu emulator, Eden enables
+      users to enjoy Switch games on diverse devices, optimized for both casual gamers
+      and emulation enthusiasts.
+    </p>
+    <p>
+      Launched on May 10, 2025, Eden leverages a Vulkan 1.4 renderer to achieve high
+      frame rates, with titles like The Legend of Zelda: Breath of the Wild exceeding
+      100 FPS on capable hardware. Its mobile-first interface offers intuitive
+      navigation, customizable controls, and per-game profiles, ensuring accessibility
+      for all users. Eden supports a growing library of games, including Super Mario
+      Odyssey and Animal Crossing: New Horizons, as listed on its official
+      compatibility page.
+    </p>
+    <p>
+      As a community-driven project, Eden thrives on contributions via its Git
+      repository and Discord community. Regular updates, including bug fixes and
+      performance enhancements, reflect its active development. This AppBundle/AppImage
+      release provides a portable, standalone solution for Linux users.
+    </p>
+    <p>
+      Eden is legally compliant, requiring users to provide their own game dumps and
+      keys.
+    </p>
+  </description>
+  <url type="homepage">https://edenemulator.com/</url>
+  <url type="bugtracker">https://git.eden-emu.dev/eden-emu/eden/-/issues</url>
+  <url type="donation">https://edenemulator.com/donate</url>
+  <url type="help">https://eden-emu.dev/compatibility.html</url>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://edenemulator.com/screenshots/gameplay_zelda.jpg</image>
+      <caption>Gameplay of The Legend of Zelda: Breath of the Wild on Eden</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://edenemulator.com/screenshots/interface_main.jpg</image>
+      <caption>Eden's user-friendly mobile-first interface</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://edenemulator.com/screenshots/mario_odyssey.jpg</image>
+      <caption>Super Mario Odyssey running smoothly on Eden</caption>
+    </screenshot>
+  </screenshots>
+  <content_rating type="oars-1.1">
+    <content_attribute id="violence-fantasy">mild</content_attribute>
+    <content_attribute id="violence-bloodshed">none</content_attribute>
+    <content_attribute id="language-profanity">none</content_attribute>
+    <content_attribute id="social-chat">none</content_attribute>
+  </content_rating>
+  <releases>
+    <release version="0.1.0" date="2025-06-13">
+      <description>
+        <p>Initial stable release with support for a wide range of Switch games,
+        Vulkan 1.4 renderer, and cross-platform compatibility.</p>
+      </description>
+    </release>
+    <release version="0.0.2-pre-alpha" date="2025-05-12">
+      <description>
+        <p>Pre-alpha release with improved compatibility and bug fixes.</p>
+      </description>
+    </release>
+    <release version="0.0.1-pre-alpha" date="2025-05-10">
+      <description>
+        <p>First public pre-alpha release, introducing core emulation features.</p>
+      </description>
+    </release>
+  </releases>
+  <keywords>
+    <keyword>Emulator</keyword>
+    <keyword>Switch</keyword>
+    <keyword>Gaming</keyword>
+  </keywords>
+  <requires>
+    <item>
+      <p>OS: 64-bit Linux (e.g., Ubuntu 22.04 or later)</p>
+    </item>
+    <item>
+      <p>CPU: AMD64 with FMA or ARM64-v8a, 6+ threads (e.g., Intel Core i5-4430,
+      AMD Ryzen 3 1200, or Qualcomm Snapdragon 460)</p>
+    </item>
+    <item>
+      <p>GPU: OpenGL 4.6 or Vulkan 1.1 compatible (e.g., NVIDIA GeForce GT 1050
+      4GB or AMD Radeon R7 240 4GB)</p>
+    </item>
+    <item>
+      <p>RAM: 8GB (dedicated GPU) or 12GB (integrated GPU), 16GB recommended</p>
+    </item>
+    <item>
+      <p>Storage: 10GB free space for emulator and game dumps</p>
+    </item>
+    <item>
+      <p>A comprehensive table of minimum system requirements is available at <a href="https://eden-emu.dev/compatibility.html">https://eden-emu.dev/compatibility.html</a></p>
+    </item>
+    <item>
+      <p>Dependencies: None. The "Light" AppImage release may require you to have specific firmware installed in your system</p>
+    </item>
+  </requires>
+</component>
