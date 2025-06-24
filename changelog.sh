@@ -11,13 +11,13 @@ if ! git clone 'https://git.eden-emu.dev/eden-emu/eden.git' ./eden; then
 	git clone 'https://github.com/pflyly/eden-mirror.git' ./eden
 fi
 cd ./eden
-git submodule update --init --recursive
 
 # Get current commit info
 COUNT="$(git rev-list --count HEAD)"
 DATE="$(date +"%Y-%m-%d")"
 HASH="$(git rev-parse --short HEAD)"
 TAG="${DATE}-${HASH}"
+SOURCE_NAME="Eden-${COUNT}-Source-Code"
 echo "$TAG" > ~/tag
 echo "$COUNT" > ~/count
 
@@ -74,11 +74,22 @@ echo "| Linux (AppImage) | **Full Builds (Built with Sharun)**<br><sub>Best comp
 [\`Legacy-light x86_64\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-Legacy-light-x86_64.AppImage) ~ 36 MB<br><br>\
 [\`Steamdeck-light x86_64\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-Steamdeck-light-x86_64.AppImage) ~ 36 MB<br><br>\
 [\`aarch64-light (Experimental)\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-Linux-light-aarch64.AppImage) ~ 35 MB |" >> "$CHANGELOG_FILE"
-echo "| Linux (AppBundle) | **AppImage alternative**<br>────────────────<br>\
+echo "| Linux (AppBundle) | **AppImage alternative**<br><sub>Faster start-up time</sub><br>────────────────<br>\
 [\`Common x86_64_v3\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-Common-x86_64_v3.dwfs.AppBundle)<br><br>\
 [\`Legacy x86_64\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-Legacy-x86_64.dwfs.AppBundle)<br><br>\
 [\`Steamdeck x86_64\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-Steamdeck-x86_64.dwfs.AppBundle)<br><br>\
 [\`aarch64 (Experimental)\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-Linux-aarch64.dwfs.AppBundle) |" >> "$CHANGELOG_FILE"
+echo "| FreeBSD (Experimental) | [\`amd64\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-27339-FreeBSD-amd64.tar.xz) |" >> "$CHANGELOG_FILE"
 echo "| Android | **Cancelled** |" >> "$CHANGELOG_FILE"
-echo "| Windows | [~~ARM64~~]*(Unavailable)*<br><br>[\`x86_64\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-Windows-x86_64.7z) |" >> "$CHANGELOG_FILE"
+echo "| Windows | [\`arm64 (Experimental)\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-Windows-ARM64.7z)<br><br>[\`x86_64\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-Windows-x86_64.7z) |" >> "$CHANGELOG_FILE"
 echo "| MacOS (Experimental) | [\`arm64\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-MacOS-arm64.7z)<br><br>[\`x86_64\`](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-MacOS-x86_64.7z) |" >> "$CHANGELOG_FILE"
+echo "| [Source Code](${BASE_DOWNLOAD_URL}/${TAG}/Eden-${COUNT}-Source-Code.7z) | |" >> "$CHANGELOG_FILE"
+
+# Pack up source for upload
+cd ..
+mkdir -p artifacts
+mkdir "$SOURCE_NAME"
+cp -av eden/. "$SOURCE_NAME"
+ZIP_NAME="$SOURCE_NAME.7z"
+7z a -t7z -mx=9 "$ZIP_NAME" "$SOURCE_NAME"
+mv "$ZIP_NAME" artifacts/
