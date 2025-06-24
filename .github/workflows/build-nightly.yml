@@ -48,6 +48,12 @@ jobs:
         with:
           name: changelog
           path: ~/changelog
+
+      - name: Upload source code
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: source
+          path: artifacts
           
   appimage: 
     runs-on: ${{ matrix.runs-on }}
@@ -85,8 +91,8 @@ jobs:
             
       - name: Install dependencies
         run: |
-          chmod +x ./get-dependencies.sh
-          ./get-dependencies.sh
+          chmod +x ./linux-dependencies.sh
+          ./linux-dependencies.sh
           
       - name: Compile Eden ${{ matrix.target }}
         run: |
@@ -115,7 +121,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        target: [Replace, Coexist]
+        target: [Replace, Coexist, Optimised]
     continue-on-error: true
     name: "Android (${{ matrix.target }})"
     env:
@@ -153,7 +159,7 @@ jobs:
          path: eden/src/android/artifacts/
           
   windows:
-    runs-on: windows-latest
+    runs-on: windows-2022
     name: "Windows (${{ matrix.target }})"
     continue-on-error: true
     strategy:
@@ -162,22 +168,19 @@ jobs:
            - target: x86_64
              arch: x86_64
              qt_arch: win64_msvc2022_64
-#           - target: x86_arm64
-#             arch: ARM64
-#             qt_arch: win64_msvc2022_arm64_cross_compiled
+           - target: x86_arm64
+             arch: ARM64
+             qt_arch: win64_msvc2022_arm64_cross_compiled
     env:
       TARGET: ${{ matrix.target }}
-      ARCH: ${{ matrix.arch }}        
+      ARCH: ${{ matrix.arch }}
     steps:
       - uses: actions/checkout@v4.2.2
-
+          
       - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1
         with:
-          arch: ${{ matrix.target }} 
-          
-      - name: Install extra tools
-        run: choco install cmake 7zip wget -y --no-progress
+          arch: ${{ matrix.target }}          
         
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
@@ -192,14 +195,25 @@ jobs:
       - name: Install vulkan-sdk
         shell: bash
         run: |
+           choco install wget -y --no-progress
            mkdir -p D:/a/_temp
            VULKAN_URL="https://sdk.lunarg.com/sdk/download/1.4.313.1/windows/vulkansdk-windows-X64-1.4.313.1.exe"
            wget -q --retry-connrefused --tries=10 "$VULKAN_URL" -O D:/a/_temp/vulkan.exe
            D:/a/_temp/vulkan.exe --accept-licenses --default-answer --confirm-command install
            echo "VULKAN_SDK=C:/VulkanSDK/1.4.313.1" >> $GITHUB_ENV
-           echo "PATH=C:/VulkanSDK/1.4.313.1/Bin:$PATH" >> $GITHUB_ENV          
-        
+           echo "PATH=C:/VulkanSDK/1.4.313.1/Bin:$PATH" >> $GITHUB_ENV
+           
+      - name: Restore vcpkg cache
+        id: vcpkg-cache
+        uses: TAServers/vcpkg-cache@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          prefix: vcpkg-${{ matrix.target}}/
+          
       - name: Compile Eden Windows ${{ matrix.target }}
+        env:
+          VCPKG_FEATURE_FLAGS: "binarycaching" # Possibly redundant, but explicitly sets the binary caching feature flag
+          VCPKG_BINARY_SOURCES: "clear;files,${{ steps.vcpkg-cache.outputs.path }},readwrite"      
         shell: bash
         run: |
           chmod +x ./eden-windows.sh
@@ -240,7 +254,7 @@ jobs:
             
       - name: Install dependencies
         run: |
-          brew install --formula --quiet autoconf automake boost ccache ffmpeg fmt glslang hidapi libtool nasm nlohmann-json qt@6 sdl2 speexdsp zlib cmake Catch2 molten-vk vulkan-loader
+          brew install --formula --quiet autoconf automake boost ccache cmake fmt glslang hidapi libiconv libtool nasm nlohmann-json qt@6 sdl2 speexdsp zlib Catch2 vulkan-loader
         
       - name: Compile Eden MacOS (${{ matrix.target }})
         run: |
@@ -252,11 +266,49 @@ jobs:
         with:
           name: eden-macos-${{ matrix.target }}
           path: eden/build/artifacts/
+
+  freebsd:
+    name: FreeBSD 
+    runs-on: ubuntu-latest
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up ccache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: FreeBSD-ccache-${{ hashFiles('vcpkg.json') }}
+          restore-keys: FreeBSD-ccache-
+
+      - name: Pull Eden with submodules
+        run: |
+          git clone https://github.com/pflyly/eden-mirror.git eden
+          cd eden
+          git submodule update --init --recursive $(awk '/path/ && !/vcpkg/ && !/libusb/ { print $3 }' .gitmodules)
+          
+      - name: Compile Eden FreeBSD
+        uses: vmactions/freebsd-vm@v1.2.1
+        with:
+          usesh: true
+          envs: 'CCACHE_DIR'
+          run: |
+            chmod +x ./freeBSD-dependencies.sh ./eden-freeBSD.sh
+            ./freeBSD-dependencies.sh && ./eden-freeBSD.sh
+            
+      - name: Upload
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: eden-freebsd
+          path: eden/build/artifacts/
+
                     
   release:
     name: "release"
     if: ${{ github.ref_name == 'main' }}
-    needs: [info, appimage, windows, macos]
+    needs: [info, appimage, windows, macos, freebsd]
     permissions:
       actions: read
       security-events: write
@@ -323,10 +375,9 @@ jobs:
         with:
            name: eden-windows-msvc-x86_64
         
-#      - uses: actions/download-artifact@v4.3.0
-#        with:
-#           name: eden-windows-msvc-x86_arm64
-#        continue-on-error: true
+      - uses: actions/download-artifact@v4.3.0
+        with:
+           name: eden-windows-msvc-x86_arm64
         
       - uses: actions/download-artifact@v4.3.0
         with:
@@ -338,6 +389,11 @@ jobs:
         
       - uses: actions/download-artifact@v4.3.0
         with:
+           name: eden-freebsd
+        continue-on-error: true
+        
+      - uses: actions/download-artifact@v4.3.0
+        with:
            name: tag
            
       - uses: actions/download-artifact@v4.3.0
@@ -346,7 +402,11 @@ jobs:
            
       - uses: actions/download-artifact@v4.3.0
         with:
-           name: changelog   
+           name: changelog
+           
+      - uses: actions/download-artifact@v4.3.0
+        with:
+           name: source
            
       - name: Generate changelog
         run: |
@@ -368,4 +428,4 @@ jobs:
           fail_on_unmatched_files: false
           make_latest: true
           files: |
-            *.AppImage*, *.AppBundle*, *.7z
+            *.AppImage*, *.AppBundle*, *.7z, *.tar.xz

@@ -1,7 +1,5 @@
 <h1 align="left">
   <br>
-  <a href="https://git.eden-emu.dev/eden-emu/eden"><img src="https://git.eden-emu.dev/eden-emu/eden/raw/branch/master/dist/eden.ico" width="200"></a>
-  <br>
   <b>Unofficial Eden Nightly Release</b>
   <br>
 </h1>
@@ -15,8 +13,9 @@
 This repository provides **unofficial nightly releases** of **Eden** for the following platforms:
 
 - **Linux** (`x86_64`, `aarch64`)
+- **FreeBSD** (Highly Experimental)
 - **Android** — *Cancelled from release for now*
-- **Windows** (`x86_64`, `arm64`) — *ARM64 is cancelled for now*
+- **Windows** (`x86_64`, `arm64`)
 - **MacOS** (`x86_64`, `arm64`)
 
 >[!WARNING]
@@ -36,6 +35,8 @@ The builds for Linux are built with several CPU-specific compliler optimization 
 - **AArch64 devices** — compatible with `aarch64` architecture
 
 AppImages built using [**Sharun**](https://github.com/VHSgunzo/sharun) are bundled with **Mesa drivers** to ensure maximum compatibility — similar to Eden’s official releases and may include the latest fixes for certain games (though untested).
+>[!WARNING]
+Some users have reported issues with this version. Use with caution and report any problems if possible.
 
 A newly added **AppBundle** version, built with [**pelf**](https://github.com/xplshn/pelf), serves as an alternative to AppImage. It's a lightweight format written in Go and intended for broader Linux compatibility.
 
@@ -49,6 +50,13 @@ These builds should work on any linux distro.
 
 ---------------------------------------------------------------
 
+### FreeBSD Builds
+> ⚠️ FreeBSD builds are **not officially supported** at the moment and are provided for **testing purposes only**.
+>   
+> Functionality may be limited and issues are expected. If you encounter any problems, you're welcome to open an issue.
+> 
+---------------------------------------------------------------
+
 ### 🤖 Android Builds
 
 Eden nightly for Android is available in two versions:
@@ -60,6 +68,10 @@ Shares the same application ID as the official Eden release. Installing this ver
 - **Coexist** Build
   
 Uses a nightly application ID, allowing it to coexist with the official Eden release. It appears as "**eden unofficial**" on the home screen, and "**Eden Unofficial**" on the main screen of eden.
+
+- **Optimised** Build
+  
+Using com.miHoYo.Yuanshen for application ID to enable device dependent features such as AI frame generation. It appears as "**eden Optimised**" on the home screen.
 
 ---------------------------------------------------------------
 
